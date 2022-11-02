@@ -31,35 +31,22 @@ app.get("/ping", (req,res)=> {
     res.status(201).json({message : "pong"})
 });
 
-app.post('/books', async (req, res) => {
-	const { title, description, coverImage} = req.body
+app.post('/users/signup', async (req, res) => {
+	const { name, email, password, age} = req.body
     
 	await myDataSource.query(
-		`INSERT INTO books(
-		    title,
-		    description,
-		    cover_image
-		) VALUES (?, ?, ?);
+		`INSERT INTO users(
+		    name,
+		    email,
+		    password,
+            age    
+		) VALUES (?, ?, ?, ?);
 		`,
-		[ title, description, coverImage ]
+		[ name, email, password, age]
 	); 
-     res.status(201).json({ message : "successfully created" });
+     res.status(201).json({ message : "userCreated" });
 	})
 
-// Get all books
-app.get('/books', async(req,res)=>{
-    await myDataSource.query(
-        `SELECT
-            b.id,
-            b.title,
-            b.description,
-            b.cover_image
-          FROM books b`
-        ,(err, rows) => {
-            res.status(200).json(rows)
-        }
-    )
-});
 
 const server = http.createServer(app)
 const PORT = process.env.PORT;
