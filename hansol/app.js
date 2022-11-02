@@ -1,13 +1,17 @@
 const http = require('http')
+
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
 const dotenv = require('dotenv')
 const { DataSource } = require('typeorm')
+dotenv.config()
 
-dotenv.config()//환경변수를 사용하기 전에 놔야함 밑으로 가면 에러발생.
-
-const myDataSource = new DataSource({
+const app = express();
+const server = http.createServer(app)
+const PORT = process.env.PORT;
+ 
+const dataSource = new DataSource({
     type: process.env.TYPEORM_CONNECTION,
     host: process.env.TYPEORM_HOST,
     port: process.env.TYPEORM_PORT,
@@ -16,17 +20,17 @@ const myDataSource = new DataSource({
     database: process.env.TYPEORM_DATABASE, 
 })
 
-myDataSource.initialize()
+dataSource.initialize()
+
     .then(()=>{
         console.log('Data Source has been initialized');
     })
     .catch((err)=> {
         console.error('Error during Data Source initialization', err)
-    myDataSource.destroy()
+        dataSource.destroy()
     })
 
 
-const app = express();
 
 app.use(express.json());
 app.use(cors());
@@ -36,8 +40,34 @@ app.get('/ping', (req,res)=> {
     res.json({message: 'pong'});
 });
 
-const server = http.createServer(app)
-const PORT = process.env.PORT;
+app.get('/users', async (req,res) => {
+    await dataSource.query(
+        `SELECT
+                users.name,
+                users.email,
+                users.password
+        from users`
+
+        ,(err,rows)=>{
+            res.status(200).json(rows);
+        }
+    );    
+});
+
+app.post('/signup', async (req, res) => {
+	const { name, email, password } = req.body
+    
+	await dataSource.query(
+		`INSERT INTO users(
+		    name,
+		    email,
+		    password
+		) VALUES (?, ?, ?);
+		`,
+		[ name, email, password ]
+	); 
+     res.status(201).json({ message : "userCreated" });
+	})
 
 const start = async() => {
     server.listen(PORT, ()=> console.log(`server is listening on ${PORT}`) )
