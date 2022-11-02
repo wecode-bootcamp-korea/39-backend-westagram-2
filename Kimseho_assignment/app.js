@@ -1,11 +1,9 @@
+require("dotenv").config();
+
 const http = require("http");
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
-
-const dotenv = require("dotenv");
-dotenv.config();
-
 const { DataSource } = require("typeorm");
 
 const myDataSource = new DataSource({
@@ -17,33 +15,30 @@ const myDataSource = new DataSource({
   database: process.env.TYPEORM_DATABASE,
 });
 
-// prettier-ignore
-myDataSource.initialize() 
-.then(() => {
+myDataSource.initialize().then(() => {
   console.log("Data Source has been initialized!");
 });
 
-app = express();
+const app = express();
 
 app.use(express.json());
 app.use(cors());
 app.use(morgan("dev"));
 
-//health check
 app.get("/ping", (req, res) => {
   res.status(200).json({ message: "pong" });
 });
 
-//create a book
 app.post("/user_signup", async (req, res, next) => {
   const { name, email, password, profile_image } = req.body;
 
-  //console.log(req)
-
   await myDataSource.query(
     `INSERT INTO users(
-      name, email, password, profile_image)
-     VALUES (?,?,?,?);
+          name,
+          email,
+          password,
+          profile_image)
+      VALUES (?,?,?,?);
     `,
     [name, email, password, profile_image]
   );
@@ -54,14 +49,12 @@ app.post("/user_signup", async (req, res, next) => {
 app.post("/postup", async (req, res, next) => {
   const { user_id, posting_title, posting_content, posting_imgUrl } = req.body;
 
-  //console.log(req)
-
   await myDataSource.query(
-    `INSERT INTO users(
-    user_id,
-    posting_title,
-    posting_content,
-    posting_imgUrl)
+    `INSERT INTO posts(
+        user_id,
+        posting_title,
+        posting_content,
+        posting_imgUrl)
     VALUES (?,?,?,?);
     `,
     [user_id, posting_title, posting_content, posting_imgUrl]
