@@ -29,7 +29,23 @@ app.get("/ping", (req, res) => {
   res.status(200).json({ message: "pong" });
 });
 
-app.post("/user_signup", async (req, res, next) => {
+app.get("/posts", async (req, res) => {
+  await myDataSource.query(
+    `SELECT
+        users.id AS userId,
+        users.profile_image AS userProfileImage,
+        posts.id AS postingId,
+        posts.posting_imgUrl AS postingImageUrl,
+        posts.posting_content AS postingContent
+      FROM users
+      LEFT JOIN posts ON posts.user_id = users.id`,
+    (err, rows) => {
+      res.status(200).json({ data: rows });
+    }
+  );
+});
+
+app.post("/user/signup", async (req, res, next) => {
   const { name, email, password, profile_image } = req.body;
 
   await myDataSource.query(
