@@ -17,7 +17,9 @@ const myDataSource = new DataSource({
   database: process.env.TYPEORM_DATABASE,
 });
 
-myDataSource.initialize().then(() => {
+// prettier-ignore
+myDataSource.initialize() 
+.then(() => {
   console.log("Data Source has been initialized!");
 });
 
@@ -47,6 +49,25 @@ app.post("/user_signup", async (req, res, next) => {
   );
 
   res.status(201).json({ message: "userCreated!" });
+});
+
+app.post("/postup", async (req, res, next) => {
+  const { user_id, posting_title, posting_content, posting_imgUrl } = req.body;
+
+  //console.log(req)
+
+  await myDataSource.query(
+    `INSERT INTO users(
+    user_id,
+    posting_title,
+    posting_content,
+    posting_imgUrl)
+    VALUES (?,?,?,?);
+    `,
+    [user_id, posting_title, posting_content, posting_imgUrl]
+  );
+
+  res.status(201).json({ message: "postCreated!" });
 });
 
 const server = http.createServer(app);
