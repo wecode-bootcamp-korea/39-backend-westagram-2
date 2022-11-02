@@ -1,6 +1,8 @@
-const dotenv = require("dotenv");
-dotenv.config()
+// Built-in package
 const http = require("http");
+
+// 3rd-party package
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
