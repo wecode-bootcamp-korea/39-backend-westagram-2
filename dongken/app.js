@@ -1,10 +1,10 @@
+require('dotenv').config();
+
 const http = require("http");
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
-const dotenv = require("dotenv");
 
-dotenv.config();
 
 const {DataSource} = require('typeorm');
 
@@ -28,7 +28,37 @@ app.use(cors());
 app.use(morgan('combined'));
 
 app.get("/ping", (req,res)=> {
-    res.json({message : "pong"})
+    res.status(201).json({message : "pong"})
+});
+
+app.post('/books', async (req, res) => {
+	const { title, description, coverImage} = req.body
+    
+	await myDataSource.query(
+		`INSERT INTO books(
+		    title,
+		    description,
+		    cover_image
+		) VALUES (?, ?, ?);
+		`,
+		[ title, description, coverImage ]
+	); 
+     res.status(201).json({ message : "successfully created" });
+	})
+
+// Get all books
+app.get('/books', async(req,res)=>{
+    await myDataSource.query(
+        `SELECT
+            b.id,
+            b.title,
+            b.description,
+            b.cover_image
+          FROM books b`
+        ,(err, rows) => {
+            res.status(200).json(rows)
+        }
+    )
 });
 
 const server = http.createServer(app)
