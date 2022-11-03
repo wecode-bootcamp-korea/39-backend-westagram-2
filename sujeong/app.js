@@ -42,14 +42,28 @@ app.use(express.json());
 app.use(cors());
 app.use(morgan('dev'))
 
-app.get("ping", (req, res) =>{
-    res.json({message: "pong"})
-})
+// app.get("ping", (req, res) =>{
+//     res.json({message: "pong"})
+// })
 
 //health check
 app.get("/ping",(req, res, next)=>{
     res.status(200).json({message:'pong'})
 })
+
+// app.post("/users",async(req , res, next)=>{
+//     const {name, password} =req.body
+
+//     await myDataSource.query(
+//         `INSERT INTO users(
+//             name,
+//             password
+//         )VALUES(?,?,?);`
+//         [name, password]
+//     );
+//     res.status(200).json({message: "userCreated"})
+// })
+
 
 const server = http.createServer(app)
 
