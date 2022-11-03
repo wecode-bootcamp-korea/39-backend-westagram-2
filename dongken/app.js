@@ -4,6 +4,8 @@ const http = require("http");
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
+const util = require('util');
+
 
 
 const {DataSource} = require('typeorm');
@@ -32,35 +34,52 @@ app.get("/ping", (req,res)=> {
 });
 
 app.post('/users/signup', async (req, res) => {
-	const { name, email, password, age} = req.body
+	const { name, email, profile_image, password} = req.body
+    console.log(req.header);
     
 	await myDataSource.query(
 		`INSERT INTO users(
 		    name,
 		    email,
-		    password,
-            age    
+		    profile_image,
+            password
 		) VALUES (?, ?, ?, ?);
 		`,
-		[ name, email, password, age]
+		[ name, email, profile_image, password]
 	); 
      res.status(201).json({ message : "userCreated" });
 	})
 
  app.post('/posts', async (req, res) => {
-	const { title, content, user_id} = req.body
+	const { title, content, image_url, user_id} = req.body
     
 	await myDataSource.query(
 		`INSERT INTO posts(
 		    title,
 		    content,
-		    user_id
-		) VALUES (?, ?, ?);
+		    image_url,
+            user_id
+		) VALUES (?, ?, ?,?);
 		`,
-		[ title, content, user_id]
+		[ title, content, image_url, user_id]
 	); 
      res.status(201).json({ message : "postCreated" });
-	})   
+	})
+
+    app.get('/posts/all', async(req, res) => {
+        await myDataSource.query(
+        `SELECT 
+            users.id as userId,
+            users.profile_image as userProfileImage,
+            posts.id as postingId,
+            posts.image_url as postingImageUrl,
+            posts.content as postingContent
+        FROM posts
+        INNER JOIN users ON posts.user_id = users.id`
+            ,(err, rows) => {
+          res.status(200).json({data : rows});
+        });
+    });
 
 
 const server = http.createServer(app)
