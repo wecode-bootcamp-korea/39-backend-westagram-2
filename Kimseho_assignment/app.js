@@ -45,6 +45,31 @@ app.get("/posts", async (req, res) => {
   );
 });
 
+<<<<<<< HEAD
+=======
+app.get("/posts/:userId", async (req, res) => {
+  const { userId } = req.params;
+  const user = await myDataSource.query(
+    `SELECT  
+        users.id AS userId,
+        users.profile_image AS userProfileImage
+    FROM users
+    WHERE users.id = ${userId}
+    `
+  );
+  const userpost = await myDataSource.query(
+    `SELECT  
+        posts.id AS postingId,
+        posts.posting_imgUrl AS postingImageUrl,
+        posts.posting_content AS postingContent
+    FROM posts
+    WHERE posts.user_id = ${userId}`
+  );
+  user[0].postings = userpost;
+  res.status(200).json({ data: user[0] });
+});
+
+>>>>>>> Seho/assignment3
 app.post("/user/signup", async (req, res, next) => {
   const { name, email, password, profile_image } = req.body;
 
@@ -79,6 +104,82 @@ app.post("/postup", async (req, res, next) => {
   res.status(201).json({ message: "postCreated!" });
 });
 
+<<<<<<< HEAD
+=======
+app.post("/postlike/:postId/:userId", async (req, res, next) => {
+  const { userId, postId } = req.params;
+
+  let [checkLike] = await myDataSource.query(
+    `SELECT id,
+        user_id,
+        post_id
+    From likes
+    WHERE user_id =${userId} AND post_id =${postId}
+    `
+  );
+
+  if (checkLike == undefined) {
+    await myDataSource.query(
+      `INSERT INTO likes(
+        user_id,
+        post_id)
+    VALUES (${userId},${postId});
+    `
+    );
+  } else {
+    await myDataSource.query(
+      `DELETE from likes
+      WHERE id = ${checkLike.id}
+      `
+    );
+  }
+
+  res.status(201).json({ message: "likeCreated or deleted" });
+});
+
+app.patch("/post/:postId", async (req, res, next) => {
+  const { postId } = req.params;
+  const { postingTitle, postingContent, postingImg } = req.body;
+
+  await myDataSource.query(
+    `UPDATE posts
+    Set
+        posting_title = ?,
+        posting_content = ?,
+        posting_imgUrl = ?
+    WHERE id = ${postId}
+    `,
+    [postingTitle, postingContent, postingImg]
+  );
+
+  await myDataSource.query(
+    `SELECT
+        users.id AS userId,
+        users.profile_image AS userProfileImage,
+        posts.id AS postingId,
+        posts.posting_imgUrl AS postingImageUrl,
+        posts.posting_content AS postingContent
+      FROM users
+      LEFT JOIN posts ON posts.user_id = users.id
+      WHERE posts.id =${postId}`,
+    (err, rows) => {
+      res.status(201).json({ data: rows });
+    }
+  );
+});
+
+app.delete("/post/:postId", async (req, res) => {
+  const { postId } = req.params;
+
+  await myDataSource.query(
+    `DELETE FROM posts
+    WHERE posts.id = ${postId}
+    `
+  );
+  res.status(200).json({ message: "postingDeleted" });
+});
+
+>>>>>>> Seho/assignment3
 const server = http.createServer(app);
 const PORT = process.env.PORT;
 
