@@ -1,5 +1,17 @@
-# Created by https://www.toptal.com/developers/gitignore/api/node,macos,dotenv
-# Edit at https://www.toptal.com/developers/gitignore?templates=node,macos,dotenv
+# Created by https://www.toptal.com/developers/gitignore/api/node,dotenv,macos,database
+# Edit at https://www.toptal.com/developers/gitignore?templates=node,dotenv,macos,database
+
+/db/schema.sql
+
+### Database ###
+*.accdb
+*.db
+*.dbf
+*.mdb
+*.pdb
+*.sqlite3
+*.db-shm
+*.db-wal
 
 ### dotenv ###
 .env
@@ -176,4 +188,4 @@ dist
 # SvelteKit build / generate output
 .svelte-kit
 
-# End of https://www.toptal.com/developers/gitignore/api/node,macos,dotenv
+# End of https://www.toptal.com/developers/gitignore/api/node,dotenv,macos,database
