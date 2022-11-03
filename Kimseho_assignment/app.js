@@ -79,7 +79,6 @@ app.post("/postup", async (req, res, next) => {
   res.status(201).json({ message: "postCreated!" });
 });
 
-
 app.post("/postlike/:postId/:userId", async (req, res, next) => {
   const { userId, postId } = req.params;
 
@@ -153,7 +152,6 @@ app.delete("/post/:postId", async (req, res) => {
   res.status(200).json({ message: "postingDeleted" });
 });
 
->>>>>>> Seho/assignment3
 const server = http.createServer(app);
 const PORT = process.env.PORT;
 
