@@ -37,6 +37,23 @@ app.get("/ping", (req,res) => {
     res.json({ message : "pong" });
 })
 
+// 유저 회원가입 엔드포인트 구현
+app.post("/users/signup", async(req, res, next) => {
+    const { name, email, profileImage, password } = req.body
+
+    await appDataSource.query(
+        `INSERT INTO users(
+            name, 
+            email,
+            profile_image,
+            password
+        ) VALUES (?, ?, ?, ?);
+        `, [name, email, profileImage, password]
+    );
+
+    res.status(201).json({ message : "userCreated"});
+})
+
 const server = http.createServer(app);
 const PORT = process.env.PORT;
 
