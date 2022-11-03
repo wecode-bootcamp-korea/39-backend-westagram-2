@@ -101,6 +101,20 @@ app.post("/postup", async (req, res, next) => {
   res.status(201).json({ message: "postCreated!" });
 });
 
+app.post("/postlike/:postId/:userId", async (req, res, next) => {
+  const { userId, postId } = req.params;
+
+  await myDataSource.query(
+    `INSERT INTO likes(
+      user_id,
+      post_id)
+    VALUES (${userId},${postId});
+    `
+  );
+
+  res.status(201).json({ message: "likeCreated" });
+});
+
 app.patch("/post/:postId", async (req, res, next) => {
   const { postId } = req.params;
   const { postingTitle, postingContent, postingImg } = req.body;
@@ -127,7 +141,7 @@ app.patch("/post/:postId", async (req, res, next) => {
       LEFT JOIN posts ON posts.user_id = users.id
       WHERE posts.id =${postId}`,
     (err, rows) => {
-      res.status(200).json({ data: rows });
+      res.status(201).json({ data: rows });
     }
   );
 });
@@ -140,7 +154,7 @@ app.delete("/post/:postId", async (req, res) => {
     WHERE posts.id = ${postId}
     `
   );
-  res.status(204).json({ message: "postingDeleted" });
+  res.status(200).json({ message: "postingDeleted" });
 });
 
 const server = http.createServer(app);
