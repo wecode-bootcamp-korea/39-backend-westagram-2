@@ -104,15 +104,32 @@ app.post("/postup", async (req, res, next) => {
 app.post("/postlike/:postId/:userId", async (req, res, next) => {
   const { userId, postId } = req.params;
 
-  await myDataSource.query(
-    `INSERT INTO likes(
-      user_id,
-      post_id)
-    VALUES (${userId},${postId});
+  let [checkLike] = await myDataSource.query(
+    `SELECT id,
+        user_id,
+        post_id
+    From likes
+    WHERE user_id =${userId} AND post_id =${postId}
     `
   );
 
-  res.status(201).json({ message: "likeCreated" });
+  if (checkLike == undefined) {
+    await myDataSource.query(
+      `INSERT INTO likes(
+        user_id,
+        post_id)
+    VALUES (${userId},${postId});
+    `
+    );
+  } else {
+    await myDataSource.query(
+      `DELETE from likes
+      WHERE id = ${checkLike.id}
+      `
+    );
+  }
+
+  res.status(201).json({ message: "likeCreated or deleted" });
 });
 
 app.patch("/post/:postId", async (req, res, next) => {
@@ -122,9 +139,9 @@ app.patch("/post/:postId", async (req, res, next) => {
   await myDataSource.query(
     `UPDATE posts
     Set
-      posting_title = ?,
-      posting_content = ?,
-      posting_imgUrl = ?
+        posting_title = ?,
+        posting_content = ?,
+        posting_imgUrl = ?
     WHERE id = ${postId}
     `,
     [postingTitle, postingContent, postingImg]
