@@ -1,17 +1,15 @@
-// Built-in package
-const http = require("http");
-
-// 3rd-party package
 require("dotenv").config();
+
+const http = require("http");
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 
 
-const {appendFile} =  require("fs")
+const { appendFile } =  require("fs")
 const { DataSource } = require('typeorm');
 
-const myDataSource = new DataSource({
+const appDataSource = new DataSource({
     type: process.env.TYPEORM_CONNECTION,
     host: process.env.TYPEORM_HOST,
     port: process.env.TYPEORM_PORT,
@@ -20,13 +18,13 @@ const myDataSource = new DataSource({
     database: process.env.TYPEORM_DATABASE
 })
 
-myDataSource.initialize()
+appDataSource.initialize()
     .then(() => {
         console.log("Data Source has been initialized!")
     })
     .catch((err) => {
         Console.error("Error during Data Source initialization", err)
-    myDataSource.destroy()
+    appDataSource.destroy()
     })
 
 const app = express();
