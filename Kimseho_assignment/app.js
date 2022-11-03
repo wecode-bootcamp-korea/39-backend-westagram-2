@@ -45,6 +45,28 @@ app.get("/posts", async (req, res) => {
   );
 });
 
+app.get("/posts/:userId", async (req, res) => {
+  const { userId } = req.params;
+  const user = await myDataSource.query(
+    `SELECT  
+        users.id AS userId,
+        users.profile_image AS userProfileImage
+    FROM users
+    WHERE users.id = ${userId}
+    `
+  );
+  const userpost = await myDataSource.query(
+    `SELECT  
+        posts.id AS postingId,
+        posts.posting_imgUrl AS postingImageUrl,
+        posts.posting_content AS postingContent
+    FROM posts
+    WHERE posts.user_id = ${userId}`
+  );
+  user[0].postings = userpost;
+  res.status(200).json({ data: user[0] });
+});
+
 app.post("/user/signup", async (req, res, next) => {
   const { name, email, password, profile_image } = req.body;
 
