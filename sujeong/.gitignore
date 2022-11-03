@@ -401,4 +401,5 @@ zsdoc/data
 node_modules/
 json-schema/
 
+.vscode/
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,vim,webstorm,macos,linux,windows,zsh,node
