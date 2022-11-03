@@ -101,7 +101,7 @@ app.post("/postup", async (req, res, next) => {
   res.status(201).json({ message: "postCreated!" });
 });
 
-app.patch("/post/patch/:postId", async (req, res, next) => {
+app.patch("/post/:postId", async (req, res, next) => {
   const { postId } = req.params;
   const { postingTitle, postingContent, postingImg } = req.body;
 
@@ -130,6 +130,17 @@ app.patch("/post/patch/:postId", async (req, res, next) => {
       res.status(200).json({ data: rows });
     }
   );
+});
+
+app.delete("/post/:postId", async (req, res) => {
+  const { postId } = req.params;
+
+  await myDataSource.query(
+    `DELETE FROM posts
+    WHERE posts.id = ${postId}
+    `
+  );
+  res.status(204).json({ message: "postingDeleted" });
 });
 
 const server = http.createServer(app);
