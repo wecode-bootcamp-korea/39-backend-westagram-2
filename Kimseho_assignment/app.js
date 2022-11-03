@@ -101,6 +101,37 @@ app.post("/postup", async (req, res, next) => {
   res.status(201).json({ message: "postCreated!" });
 });
 
+app.patch("/post/patch/:postId", async (req, res, next) => {
+  const { postId } = req.params;
+  const { postingTitle, postingContent, postingImg } = req.body;
+
+  await myDataSource.query(
+    `UPDATE posts
+    Set
+      posting_title = ?,
+      posting_content = ?,
+      posting_imgUrl = ?
+    WHERE id = ${postId}
+    `,
+    [postingTitle, postingContent, postingImg]
+  );
+
+  await myDataSource.query(
+    `SELECT
+        users.id AS userId,
+        users.profile_image AS userProfileImage,
+        posts.id AS postingId,
+        posts.posting_imgUrl AS postingImageUrl,
+        posts.posting_content AS postingContent
+      FROM users
+      LEFT JOIN posts ON posts.user_id = users.id
+      WHERE posts.id =${postId}`,
+    (err, rows) => {
+      res.status(200).json({ data: rows });
+    }
+  );
+});
+
 const server = http.createServer(app);
 const PORT = process.env.PORT;
 
