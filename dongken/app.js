@@ -6,9 +6,10 @@ const cors = require("cors");
 const morgan = require("morgan");
 
 
+
 const {DataSource} = require('typeorm');
 
-const myDataSource = new DataSource({
+const appDateSource = new DataSource({
     type: process.env.TYPEORM_CONNECTION,
     host: process.env.TYPEORM_HOST,
     port: process.env.TYPEORM_PORT,
@@ -17,7 +18,7 @@ const myDataSource = new DataSource({
     database: process.env.TYPEORM_DATABASE
 })
 
-myDataSource.initialize()
+appDateSource.initialize()
     .then(() => {
         console.log("Data Source has been initialized!")
     })
@@ -31,36 +32,71 @@ app.get("/ping", (req,res)=> {
     res.status(201).json({message : "pong"})
 });
 
-app.post('/books', async (req, res) => {
-	const { title, description, coverImage} = req.body
+app.post('/users/signup', async (req, res) => {
+	const { name, email, profile_image, password} = req.body
+
     
-	await myDataSource.query(
-		`INSERT INTO books(
-		    title,
-		    description,
-		    cover_image
-		) VALUES (?, ?, ?);
+    await appDateSource.query(
+		`INSERT INTO users(
+		    name,
+		    email,
+		    profile_image,
+            password
+		) VALUES (?, ?, ?, ?);
 		`,
-		[ title, description, coverImage ]
+		[ name, email, profile_image, password]
 	); 
-     res.status(201).json({ message : "successfully created" });
+     res.status(201).json({ message : "userCreated" });
 	})
 
-// Get all books
-app.get('/books', async(req,res)=>{
-    await myDataSource.query(
-        `SELECT
-            b.id,
-            b.title,
-            b.description,
-            b.cover_image
-          FROM books b`
-        ,(err, rows) => {
-            res.status(200).json(rows)
-        }
-    )
-});
+ app.post('/posts', async (req, res) => {
+	const { title, content, image_url, user_id} = req.body
+    
+	await appDateSource.query(
+		`INSERT INTO posts(
+		    title,
+		    content,
+		    image_url,
+            user_id
+		) VALUES (?, ?, ?, ?);
+		`,
+		[ title, content, image_url, user_id]
+	); 
+     res.status(201).json({ message : "postCreated" });
+	})
 
+app.get('/posts/all', async(req, res) => {
+        await appDateSource.query(
+        `SELECT 
+            users.id as userId,
+            users.profile_image as userProfileImage,
+            posts.id as postingId,
+            posts.image_url as postingImageUrl,
+            posts.content as postingContent
+        FROM posts
+        INNER JOIN users ON posts.user_id = users.id`
+            ,(err, rows) => {
+          res.status(200).json({data : rows});
+        });
+    });
+    
+app.get('/posts/:userId', async(req, res) => {
+        const {userId} = req.params
+        await appDateSource.query(
+        `SELECT 
+            users.id as userId,
+            users.profile_image as userProfileImage,
+            [posts.id as postingId,
+            posts.image_url as postingImageUrl,
+            posts.content as postingContent] AS postings
+        FROM users 
+        INNER JOIN posts ON posts.user_id = users.id
+        WHERE users.id = ${userId} `
+            ,(err, rows) => {
+          res.status(200).json({data : rows});
+        });
+    });
+    
 const server = http.createServer(app)
 const PORT = process.env.PORT;
 
@@ -69,3 +105,4 @@ const start = async() => {
 };
 
 start();
+
