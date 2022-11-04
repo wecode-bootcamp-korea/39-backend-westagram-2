@@ -6,7 +6,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 
 const { DataSource } = require("typeorm");
-const myDataSource = new DataSource({
+const database = new DataSource({
   type: process.env.TYPEORM_CONNECTION,
   host: process.env.TYPEORM_HOST,
   port: process.env.TYPEORM_PORT,
@@ -15,7 +15,7 @@ const myDataSource = new DataSource({
   database: process.env.TYPEORM_DATABASE,
 });
 
-myDataSource.initialize().then(() => {
+database.initialize().then(() => {
   console.log("Data Source has been initialized!");
 });
 
@@ -30,7 +30,7 @@ app.get("/ping", (req, res) => {
 });
 
 app.get("/posts", async (req, res) => {
-  await myDataSource.query(
+  await database.query(
     `SELECT
         users.id AS userId,
         users.profile_image AS userProfileImage,
@@ -45,10 +45,39 @@ app.get("/posts", async (req, res) => {
   );
 });
 
+app.get("/posts/:userId", async (req, res) => {
+  const { userId } = req.params;
+
+  await database.query(
+    `
+  SELECT
+      users.id as userId,
+      users.profile_image as userProfileImage,
+      P.posting
+  FROM users
+  LEFT JOIN (
+  SELECT user_id,
+  JSON_ARRAYAGG(JSON_OBJECT(
+      "postingID", posts.id,
+      "postingImageUrl", posting_imgUrl,
+      "postingContent", posting_content)
+  )AS posting
+  FROM posts
+  GROUP BY user_id
+  ) P 
+  ON P.user_id = users.id
+  WHERE users.id = ${userId}
+  `,
+    (err, [rows]) => {
+      res.status(200).json({ data: rows });
+    }
+  );
+});
+
 app.post("/user/signup", async (req, res, next) => {
   const { name, email, password, profile_image } = req.body;
 
-  await myDataSource.query(
+  await database.query(
     `INSERT INTO users(
           name,
           email,
@@ -65,7 +94,7 @@ app.post("/user/signup", async (req, res, next) => {
 app.post("/postup", async (req, res, next) => {
   const { user_id, posting_title, posting_content, posting_imgUrl } = req.body;
 
-  await myDataSource.query(
+  await database.query(
     `INSERT INTO posts(
         user_id,
         posting_title,
@@ -82,7 +111,7 @@ app.post("/postup", async (req, res, next) => {
 app.post("/postlike/:postId/:userId", async (req, res, next) => {
   const { userId, postId } = req.params;
 
-  let [checkLike] = await myDataSource.query(
+  let [checkLike] = await database.query(
     `SELECT id,
         user_id,
         post_id
@@ -92,15 +121,15 @@ app.post("/postlike/:postId/:userId", async (req, res, next) => {
   );
 
   if (checkLike == undefined) {
-    await myDataSource.query(
+    await database.query(
       `INSERT INTO likes(
-        user_id,
-        post_id)
-    VALUES (${userId},${postId});
+          user_id,
+          post_id)
+      VALUES (${userId},${postId});
     `
     );
   } else {
-    await myDataSource.query(
+    await database.query(
       `DELETE from likes
       WHERE id = ${checkLike.id}
       `
@@ -114,7 +143,7 @@ app.patch("/post/:postId", async (req, res, next) => {
   const { postId } = req.params;
   const { postingTitle, postingContent, postingImg } = req.body;
 
-  await myDataSource.query(
+  await database.query(
     `UPDATE posts
     Set
         posting_title = ?,
@@ -125,7 +154,7 @@ app.patch("/post/:postId", async (req, res, next) => {
     [postingTitle, postingContent, postingImg]
   );
 
-  await myDataSource.query(
+  await database.query(
     `SELECT
         users.id AS userId,
         users.profile_image AS userProfileImage,
@@ -144,7 +173,7 @@ app.patch("/post/:postId", async (req, res, next) => {
 app.delete("/post/:postId", async (req, res) => {
   const { postId } = req.params;
 
-  await myDataSource.query(
+  await database.query(
     `DELETE FROM posts
     WHERE posts.id = ${postId}
     `
