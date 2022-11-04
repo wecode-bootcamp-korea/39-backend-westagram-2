@@ -1,12 +1,12 @@
-const http = require('http');
-
 require('dotenv').config();
+
+const http = require('http');
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 
-const {dataSource, DataSource} = require('typeorm');
-const { runInNewContext } = require('vm');
+const {DataSource} = require('typeorm');
+
 const appDataSource = new DataSource({
     type: process.env.TYPEORM_CONNECTION,
     host: process.env.TYPEORM_HOST,
@@ -36,7 +36,6 @@ app.use(morgan('dev'))
 app.get("/ping",(req, res, next)=>{
     res.status(200).json({message:'pong'})
 })
-
 
 
 
