@@ -5,8 +5,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 
-const {dataSource, DataSource} = require('typeorm');
-const { runInNewContext } = require('vm');
+const { DataSource} = require('typeorm');
 const appDataSource = new DataSource({
     type: process.env.TYPEORM_CONNECTION,
     host: process.env.TYPEORM_HOST,
@@ -37,6 +36,20 @@ app.get("/ping",(req, res, next)=>{
     res.status(200).json({message:'pong'})
 })
 
+app.post('/users',async (req ,res,next)=>{
+    const {id, name, email, profile_image, password } =req.body
+
+    await appDataSource.query(
+        `INSERT INTO users(
+            name,
+            email,
+            profile_image,
+            password
+        ) VALUES ( ?, ?, ?, ?)
+        `,[name, email, profile_image, password]
+    );
+    res.status(201).json({message:"userCreated"})
+})
 
 
 
