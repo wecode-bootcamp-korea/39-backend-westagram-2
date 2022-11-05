@@ -26,7 +26,7 @@ app.use(cors());
 app.use(morgan("dev"));
 
 app.get("/ping", (req, res) => {
-  res.status(200).json({ message: "pong" });
+  return res.status(200).json({ message: "pong" });
 });
 
 app.get("/posts", async (req, res) => {
@@ -48,30 +48,25 @@ app.get("/posts", async (req, res) => {
 app.get("/posts/:userId", async (req, res) => {
   const { userId } = req.params;
 
-  await database.query(
+  const [rows] = await database.query(
     `
-  SELECT
-      users.id as userId,
-      users.profile_image as userProfileImage,
-      P.posting
-  FROM users
-  LEFT JOIN (
-  SELECT user_id,
-  JSON_ARRAYAGG(JSON_OBJECT(
-      "postingID", posts.id,
+    SELECT
+    u.id,
+    u.name,
+    JSON_ARRAYAGG(JSON_OBJECT(
+      "postingId", p.id,
       "postingImageUrl", posting_imgUrl,
-      "postingContent", posting_content)
-  )AS posting
-  FROM posts
-  GROUP BY user_id
-  ) P 
-  ON P.user_id = users.id
-  WHERE users.id = ${userId}
+       "postingContent", posting_content
+    )) posting
+    FROM users u
+    INNER JOIN posts p ON p.user_id = u.id
+    WHERE u.id = ?
+    GROUP BY u.id  
   `,
-    (err, [rows]) => {
-      res.status(200).json({ data: rows });
-    }
+    [userId]
   );
+
+  res.status(200).json({ data: rows });
 });
 
 app.post("/user/signup", async (req, res, next) => {
@@ -116,8 +111,9 @@ app.post("/postlike/:postId/:userId", async (req, res, next) => {
         user_id,
         post_id
     From likes
-    WHERE user_id =${userId} AND post_id =${postId}
-    `
+    WHERE user_id =? AND post_id =?
+    `,
+    [userId, postId]
   );
 
   if (checkLike == undefined) {
@@ -125,8 +121,9 @@ app.post("/postlike/:postId/:userId", async (req, res, next) => {
       `INSERT INTO likes(
           user_id,
           post_id)
-      VALUES (${userId},${postId});
-    `
+      VALUES (?,?);
+    `,
+      [userId, postId]
     );
   } else {
     await database.query(
@@ -149,12 +146,12 @@ app.patch("/post/:postId", async (req, res, next) => {
         posting_title = ?,
         posting_content = ?,
         posting_imgUrl = ?
-    WHERE id = ${postId}
+    WHERE id = ?
     `,
-    [postingTitle, postingContent, postingImg]
+    [postingTitle, postingContent, postingImg, postId]
   );
 
-  await database.query(
+  const rows = await database.query(
     `SELECT
         users.id AS userId,
         users.profile_image AS userProfileImage,
@@ -163,20 +160,20 @@ app.patch("/post/:postId", async (req, res, next) => {
         posts.posting_content AS postingContent
       FROM users
       LEFT JOIN posts ON posts.user_id = users.id
-      WHERE posts.id =${postId}`,
-    (err, rows) => {
-      res.status(201).json({ data: rows });
-    }
+      WHERE posts.id =?`,
+    [postId]
   );
-});
 
+  res.status(201).json({ data: rows });
+});
 app.delete("/post/:postId", async (req, res) => {
   const { postId } = req.params;
 
   await database.query(
     `DELETE FROM posts
-    WHERE posts.id = ${postId}
-    `
+    WHERE posts.id = ?
+    `,
+    [postId]
   );
   res.status(200).json({ message: "postingDeleted" });
 });
