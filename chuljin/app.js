@@ -53,6 +53,22 @@ app.post("/users/signup", async(req, res, next) => {
     res.status(201).json({ message : "userCreated"});
 })
 
+app.post("/posts/signup", async(req, res, next) => {
+    const { title, content, imageUrl, userId } = req.body;
+
+    await appDataSource.query(
+        `INSERT INTO posts(
+            title,
+            content,
+            image_url,
+            user_id
+        ) VALUES ( ?, ?, ?, ? );
+        `, [title, content, imageUrl, userId]
+    );
+
+    res.status(201).json({ message : "postCreated"});
+})
+
 const server = http.createServer(app);
 const PORT = process.env.PORT;
 
