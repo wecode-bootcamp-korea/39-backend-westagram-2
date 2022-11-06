@@ -125,15 +125,15 @@ app.post("/postlike/:postId/:userId", async (req, res, next) => {
     `,
       [userId, postId]
     );
+    res.status(201).json({ message: "likeCreated" });
   } else {
     await database.query(
       `DELETE from likes
       WHERE id = ${checkLike.id}
       `
     );
+    res.status(201).json({ message: "likeDeleted" });
   }
-
-  res.status(201).json({ message: "likeCreated or deleted" });
 });
 
 app.patch("/post/:postId", async (req, res, next) => {
