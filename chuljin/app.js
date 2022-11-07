@@ -149,6 +149,18 @@ app.patch("/posts/update/:userId/:postId", async(req, res, next) => {
     });
 })
 
+app.delete("/posts/delete/:id", async(req, res, next) => {
+    const { id } = req.params;
+    await appDataSource.query(
+        `DELETE 
+            FROM posts
+            WHERE id=${id}; 
+        `, (err, rows) => {
+            res.status(204).end();
+        }
+    );    
+})
+
 const server = http.createServer(app);
 const PORT = process.env.PORT;
 
