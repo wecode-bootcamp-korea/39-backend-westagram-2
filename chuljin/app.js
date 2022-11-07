@@ -69,6 +69,22 @@ app.post("/posts/signup", async(req, res, next) => {
     res.status(201).json({ message : "postCreated"});
 })
 
+app.get("/posts/lookup", async(req, res, next) => {
+    await appDataSource.manager.query(
+        `SELECT 
+                users.id as userId, 
+                users.profile_image as userProfileImage, 
+                posts.id as postingId, 
+                posts.image_url as postingImageUrl, 
+                posts.content as postingContent 
+            FROM users 
+            INNER JOIN posts 
+            ON users.id = posts.user_id
+        `, (err, rows) => {
+            res.status(200).json({ "data" : rows });
+        });
+})
+
 const server = http.createServer(app);
 const PORT = process.env.PORT;
 
