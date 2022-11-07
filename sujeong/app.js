@@ -1,11 +1,11 @@
-const http = require('http');
-
 require('dotenv').config();
+
+const http = require('http');
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 
-const { DataSource} = require('typeorm');
+const { DataSource } = require('typeorm');
 const appDataSource = new DataSource({
     type: process.env.TYPEORM_CONNECTION,
     host: process.env.TYPEORM_HOST,
@@ -50,7 +50,6 @@ app.post('/users',async (req ,res,next)=>{
     );
     res.status(201).json({message:"userCreated"})
 })
-
 
 
 const server = http.createServer(app)
