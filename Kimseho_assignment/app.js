@@ -6,6 +6,7 @@ const cors = require("cors");
 const morgan = require("morgan");
 
 const { DataSource } = require("typeorm");
+
 const database = new DataSource({
   type: process.env.TYPEORM_CONNECTION,
   host: process.env.TYPEORM_HOST,
