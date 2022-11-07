@@ -33,6 +33,14 @@ app.use(express.json());
 app.use(cors());
 app.use(morgan('dev')); 
 
+const postArr = rows => {
+    for(let i=0; i<rows.length; i++){
+        delete rows[i].userId;
+        delete rows[i].userProfileImage;
+    }
+    return rows;
+}
+
 app.get("/ping", (req,res) => {
     res.json({ message : "pong" });
 })
