@@ -81,21 +81,83 @@ app.get('/posts/all', async(req, res) => {
     });
     
 app.get('/posts/:userId', async(req, res) => {
-        const {userId} = req.params
-        await appDateSource.query(
+        const {userId} = req.params;
+        const [result] = await appDateSource.query(
         `SELECT 
             users.id as userId,
             users.profile_image as userProfileImage,
-            [posts.id as postingId,
-            posts.image_url as postingImageUrl,
-            posts.content as postingContent] AS postings
+            post.postings
         FROM users 
-        INNER JOIN posts ON posts.user_id = users.id
-        WHERE users.id = ${userId} `
-            ,(err, rows) => {
-          res.status(200).json({data : rows});
+        LEFT JOIN (
+          SELECT
+            user_id,
+            JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    "postingId",id,
+                    "postingImageUrl", image_url,
+                    "postingContent", content 
+                )
+            ) as postings
+          FROM posts
+            GROUP BY user_id
+        ) post ON post.user_id = users.id
+        WHERE users.id = ${userId}`)
+            
+          res.status(200).json({data : result});
         });
-    });
+
+app.patch('/posts/:postId', async(req, res) => {
+    const {content} = req.body;
+    const {postId} = req.params;
+
+    await appDateSource.query(
+        `UPDATE 
+            posts
+        SET 
+        content = ?
+        WHERE posts.id = ${postId}`,
+        [content]);
+
+    const [result] = await appDateSource.query(
+        `SELECT
+            users.id as userId,
+            users.name as userName,
+            posts.id as postingId,
+            posts.title as postingTitle,
+            posts.content as postingContent
+        FROM users INNER JOIN posts ON posts.user_id = users.id
+        WHERE posts.id = ${postId}
+        `
+    )
+    res.status(201).json({data : result})
+    }
+)
+
+app.delete('/posts/:postId', async(req, res) => {
+    const {postId} = req.params;
+
+    await appDateSource.query(
+    `DELETE FROM posts
+    WHERE posts.id = ${postId}`)
+    
+    res.status(200).json({ message : "postingDeleted"});
+});
+
+app.post('/likes', async (req, res) => {
+	const {user_id, post_id} = req.body
+    
+	await appDateSource.query(
+		`INSERT INTO likes(
+		    user_id,
+		    post_id
+		) VALUES (?, ?);
+		`,
+		[user_id, post_id]
+	); 
+     res.status(201).json({ message : "likeCreated" });
+	})
+
+
     
 const server = http.createServer(app)
 const PORT = process.env.PORT;
