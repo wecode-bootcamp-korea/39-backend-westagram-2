@@ -121,6 +121,34 @@ app.get("/users/posts/lookup/:id", async(req, res, next) => {
         });
 })
 
+app.patch("/posts/update/:userId/:postId", async(req, res, next) => {
+    const { userId, postId } = req.params;
+    const { content } = req.body;
+    await appDataSource.manager.query(
+        ` UPDATE 
+                posts 
+            SET content=? 
+            WHERE user_id=${userId} and id=${postId};
+        `, [content]
+    );
+
+    await appDataSource.manager.query(    
+        `SELECT 
+                users.id as userId, 
+                users.name as userName, 
+                posts.id as postingId, 
+                posts.title as postingTitle, 
+                posts.content as postingContent 
+            FROM users 
+            INNER JOIN posts 
+            ON users.id = posts.user_id
+            WHERE users.id=${userId} and posts.id=${postId};
+        `, (err, rows) => { 
+            console.log(rows)
+            res.status(200).json({"data" : rows});
+    });
+})
+
 const server = http.createServer(app);
 const PORT = process.env.PORT;
 
