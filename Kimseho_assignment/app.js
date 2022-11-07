@@ -37,8 +37,8 @@ app.get("/posts", async (req, res) => {
         posts.id AS postingId,
         posts.posting_imgUrl AS postingImageUrl,
         posts.posting_content AS postingContent
-      FROM users
-      LEFT JOIN posts ON posts.user_id = users.id`,
+    FROM users
+    LEFT JOIN posts ON posts.user_id = users.id`,
     (err, rows) => {
       res.status(200).json({ data: rows });
     }
@@ -49,20 +49,18 @@ app.get("/posts/:userId", async (req, res) => {
   const { userId } = req.params;
 
   const [rows] = await database.query(
-    `
-    SELECT
-    u.id,
-    u.name,
+    `SELECT
+        u.id,
+        u.name,
     JSON_ARRAYAGG(JSON_OBJECT(
-      "postingId", p.id,
-      "postingImageUrl", posting_imgUrl,
-       "postingContent", posting_content
+        "postingId", p.id,
+        "postingImageUrl", posting_imgUrl,
+         "postingContent", posting_content
     )) posting
     FROM users u
     INNER JOIN posts p ON p.user_id = u.id
     WHERE u.id = ?
-    GROUP BY u.id  
-  `,
+    GROUP BY u.id`,
     [userId]
   );
 
@@ -74,12 +72,11 @@ app.post("/user/signup", async (req, res, next) => {
 
   await database.query(
     `INSERT INTO users(
-          name,
-          email,
-          password,
-          profile_image)
-      VALUES (?,?,?,?);
-    `,
+        name,
+        email,
+        password,
+        profile_image)
+      VALUES (?,?,?,?)`,
     [name, email, password, profile_image]
   );
 
@@ -95,8 +92,7 @@ app.post("/postup", async (req, res, next) => {
         posting_title,
         posting_content,
         posting_imgUrl)
-    VALUES (?,?,?,?);
-    `,
+    VALUES (?,?,?,?);`,
     [user_id, posting_title, posting_content, posting_imgUrl]
   );
 
@@ -110,9 +106,8 @@ app.post("/postlike/:postId/:userId", async (req, res, next) => {
     `SELECT id,
         user_id,
         post_id
-    From likes
-    WHERE user_id =? AND post_id =?
-    `,
+    FROM likes
+    WHERE user_id =? AND post_id =?`,
     [userId, postId]
   );
 
@@ -121,16 +116,14 @@ app.post("/postlike/:postId/:userId", async (req, res, next) => {
       `INSERT INTO likes(
           user_id,
           post_id)
-      VALUES (?,?);
-    `,
+      VALUES (?,?)`,
       [userId, postId]
     );
     res.status(201).json({ message: "likeCreated" });
   } else {
     await database.query(
-      `DELETE from likes
-      WHERE id = ${checkLike.id}
-      `
+      `DELETE FROM likes
+      WHERE id = ${checkLike.id}`
     );
     res.status(201).json({ message: "likeDeleted" });
   }
@@ -142,12 +135,11 @@ app.patch("/post/:postId", async (req, res, next) => {
 
   await database.query(
     `UPDATE posts
-    Set
+    SET
         posting_title = ?,
         posting_content = ?,
         posting_imgUrl = ?
-    WHERE id = ?
-    `,
+    WHERE id = ?`,
     [postingTitle, postingContent, postingImg, postId]
   );
 
@@ -171,8 +163,7 @@ app.delete("/post/:postId", async (req, res) => {
 
   await database.query(
     `DELETE FROM posts
-    WHERE posts.id = ?
-    `,
+    WHERE posts.id = ?`,
     [postId]
   );
   res.status(200).json({ message: "postingDeleted" });
