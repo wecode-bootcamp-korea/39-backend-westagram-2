@@ -60,7 +60,7 @@ app.get('/posts', async (req, res) => {
         posts.title AS potingTitle,
         posts.image_url AS postingImageUrl,
         posts.content AS postingContent
-    FROM users 
+    FROM users
     LEFT JOIN posts ON users.id = posts.user_id
     `,
     (err, rows) => {
@@ -84,9 +84,9 @@ app.get('/users/posts/:userId', async (req, res) => {
               "postingContnet", p.content)  
           ) as postings
       FROM users u 
-        JOIN posts p ON p.user_id = u.id
-        WHERE u.id = ${userId}
-        GROUP BY u.id`
+      JOIN posts p ON p.user_id = u.id
+      WHERE u.id = ${userId}
+      GROUP BY u.id`
     );
     return res.status(200).json({ data: result });
   } catch (err) {
@@ -134,7 +134,7 @@ app.put('/posts/:postId', async (req, res) => {
           title = ?,
           content = ?,
           image_url = ?
-        WHERE id = ${postId};
+      WHERE id = ${postId};
       `,
       [postingTitle, postingContent, postingUrl]
     );
@@ -161,7 +161,7 @@ app.delete('/posts/:postId', async (req, res) => {
   const { postId } = req.params;
   await dataSource.query(
     `DELETE
-      FROM posts p
+    FROM posts p
     WHERE p.id = ${postId}
     `
   );
@@ -175,15 +175,15 @@ app.post('/likes/:postId/:userId', async (req, res) => {
       SELECT * 
       FROM likes l
       WHERE l.user_id = ${userId} AND l.post_id = ${postId} 
-    ) AS checkList
+      ) AS checkList
     `
   );
   if (Number(likeData.checkList) === 1) {
     await dataSource.query(
       `DELETE
-          FROM likes l
-          WHERE l.user_id = ${userId} and l.post_id = ${postId}
-        `
+      FROM likes l
+      WHERE l.user_id = ${userId} and l.post_id = ${postId}
+      `
     );
     res.status(201).json({ message: 'likeCanceled' });
   } else {
@@ -191,8 +191,8 @@ app.post('/likes/:postId/:userId', async (req, res) => {
       `INSERT INTO likes(
           user_id,
           post_id
-        ) VALUES (?, ?);
-        `,
+          ) VALUES (?, ?);
+      `,
       [userId, postId]
     );
     res.status(201).json({ message: 'likeCreated' });
