@@ -5,7 +5,15 @@ const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 const { DataSource } = require("typeorm");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
+const saltRounds = 10;
+const header = {
+  typ: "JWT",
+  alg: "HS256",
+};
+const payLoad = { foo: "bar" };
 const myDataSource = new DataSource({
   type: process.env.TYPEORM_CONNECTION,
   host: process.env.TYPEORM_HOST,
@@ -29,8 +37,38 @@ app.get("/ping", (req, res) => {
   res.status(200).json({ message: "pong" });
 });
 
-app.post("/user_signup", async (req, res, next) => {
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const [checkUser] = await myDataSource.query(
+      `SELECT 
+        email,
+        password
+    FROM users
+    WHERE email = ?`,
+      [email]
+    );
+
+    const checkHash = (password, hashedPassword) => {
+      return bcrypt.compare(password, hashedPassword);
+    };
+
+    if (await checkHash(password, checkUser["password"])) {
+      const jwtToken = jwt.sign(payLoad, checkUser["password"]);
+      return res.status(201).json({ accessToken: jwtToken });
+    } else {
+      return res.status(404).json({ message: "Invalid User" });
+    }
+  } catch (err) {
+    console.log(err);
+    return res.status(409).json({ message: "email wrong" });
+  }
+});
+
+app.post("/user/signup", async (req, res, next) => {
   const { name, email, password, profile_image } = req.body;
+
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
 
   await myDataSource.query(
     `INSERT INTO users(
@@ -40,7 +78,7 @@ app.post("/user_signup", async (req, res, next) => {
           profile_image)
       VALUES (?,?,?,?);
     `,
-    [name, email, password, profile_image]
+    [name, email, hashedPassword, profile_image]
   );
 
   res.status(201).json({ message: "userCreated!" });
