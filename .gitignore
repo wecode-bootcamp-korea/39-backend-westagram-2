@@ -742,7 +742,5 @@ FodyWeavers.xsd
 
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm,visualstudio,visualstudiocode,vim,macos,zsh,linux
 #
-#
+d#
 my_settings.py
-
-schema.sql
