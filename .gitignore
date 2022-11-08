@@ -745,3 +745,5 @@ FodyWeavers.xsd
 #
 
 my_settings.py
+
+schema.sql
