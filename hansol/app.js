@@ -1,10 +1,10 @@
-require('dotenv').config();
+require("dotenv").config();
 
-const http = require('http');
-const express = require('express');
-const morgan = require('morgan');
-const cors = require('cors');
-const { DataSource } = require('typeorm');
+const http = require("http");
+const express = require("express");
+const morgan = require("morgan");
+const cors = require("cors");
+const { DataSource } = require("typeorm");
 
 const app = express();
 const server = http.createServer(app);
@@ -23,19 +23,19 @@ myDataSource
   .initialize()
 
   .then(() => {
-    console.log('Data Source has been initialized');
+    console.log("Data Source has been initialized");
   })
   .catch((err) => {
-    console.error('Error during Data Source initialization', err);
+    console.error("Error during Data Source initialization", err);
     myDataSource.destroy();
   });
 
 app.use(express.json());
 app.use(cors());
-app.use(morgan('dev'));
+app.use(morgan("dev"));
 
-app.get('/ping', (req, res) => {
-  res.json({ message: 'pong' });
+app.get("/ping", (req, res) => {
+  res.json({ message: "pong" });
 });
 
 const start = async () => {
