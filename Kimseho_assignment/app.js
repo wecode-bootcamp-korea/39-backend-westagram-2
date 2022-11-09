@@ -8,11 +8,6 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { DataSource } = require("typeorm");
 
-const header = {
-  typ: "JWT",
-  alg: "HS256",
-};
-const payLoad = { foo: "bar" };
 const database = new DataSource({
   type: process.env.TYPEORM_CONNECTION,
   host: process.env.TYPEORM_HOST,
@@ -98,7 +93,8 @@ app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
     const [checkUser] = await database.query(
-      `SELECT 
+      `SELECT
+        id, 
         email,
         password
     FROM users
@@ -111,7 +107,10 @@ app.post("/login", async (req, res) => {
     };
 
     if (await checkHash(password, checkUser["password"])) {
-      const jwtToken = jwt.sign(payLoad, secretKey);
+      const jwtToken = jwt.sign({ id: checkUser.id }, secretKey, {
+        expiresIn: "1d",
+      });
+
       return res.status(201).json({ accessToken: jwtToken });
     } else {
       return res.status(404).json({ message: "Invalid User" });
@@ -128,11 +127,9 @@ app.post("/postup", async (req, res, next) => {
     const { user_id, posting_title, posting_content, posting_imgUrl } =
       req.body;
 
-    const { headers } = req;
-    const decoded = jwt.verify(req.headers.authorization, secretKey);
+    const decoded = jwt.verify(req.headers.token, secretKey);
 
     console.log(decoded);
-
     await database.query(
       `INSERT INTO posts(
         user_id,
@@ -140,7 +137,7 @@ app.post("/postup", async (req, res, next) => {
         posting_content,
         posting_imgUrl)
     VALUES (?,?,?,?);`,
-      [user_id, posting_title, posting_content, posting_imgUrl]
+      [decoded["id"], posting_title, posting_content, posting_imgUrl]
     );
 
     res.status(201).json({ message: "postCreated!" });
