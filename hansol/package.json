@@ -18,15 +18,11 @@
     "typeorm": "^0.3.10"
   },
   "devDependencies": {
-<<<<<<< HEAD
     "eslint": "^8.26.0",
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-node": "^11.1.0",
     "prettier": "2.7.1"
-=======
-    "nodemon": "^2.0.20"
->>>>>>> main
   }
 }
