@@ -4,12 +4,15 @@ const http = require('http');
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const { DataSource } = require('typeorm');
 
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT;
+const secretKey = process.env.JWT_SECRET_KEY;
 
 const dataSource = new DataSource({
   type: process.env.TYPEORM_CONNECTION,
@@ -69,7 +72,7 @@ app.get('/posts', async (req, res) => {
   );
 });
 
-app.get('/users/posts/:userId', async (req, res) => {
+app.get('/posts/:userId', async (req, res) => {
   const { userId } = req.params;
 
   try {
@@ -96,32 +99,82 @@ app.get('/users/posts/:userId', async (req, res) => {
 
 app.post('/signup', async (req, res) => {
   const { name, email, password } = req.body;
+  const saltRounds = 12;
 
-  await dataSource.query(
-    `INSERT INTO users(
-		    name,
-		    email,
-		    password
-		) VALUES (?, ?, ?);
-		`,
-    [name, email, password]
-  );
-  res.status(201).json({ message: 'userCreated' });
+  const makeHash = async (password, saltRounds) => {
+    return await bcrypt.hash(password, saltRounds);
+  };
+  const hashMain = async () => {
+    const hashedPassword = await makeHash(password, saltRounds);
+    await dataSource.query(
+      `INSERT INTO users(
+          name,
+          email,
+          password
+      ) VALUES (?, ?, ?);
+      `,
+      [name, email, hashedPassword]
+    );
+    res.status(201).json({ message: 'userCreated' });
+  };
+
+  hashMain();
+});
+
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  const checkHash = (p, hashedPassword) => bcrypt.compare(p, hashedPassword);
+
+  const login = async () => {
+    const [result] = await dataSource.query(
+      `SELECT
+          users.id,
+          users.name,
+          users.email,
+          users.password
+      FROM users
+      WHERE email = ?
+      `,
+      [email]
+    );
+
+    const check = await checkHash(password, result.password);
+    const payLoad = { payLoad: result.name };
+    const jwtToken = jwt.sign(payLoad, secretKey);
+
+    if (check === true) {
+      res.cookie('Token', `${jwtToken}`);
+      res.status(200).json({ accessToken: jwtToken });
+    } else {
+      res.status(401).json({ message: 'Invalid User' });
+    }
+  };
+
+  login();
 });
 
 app.post('/posts', async (req, res) => {
   const { title, content, user_id } = req.body;
+  const { cookie } = req.headers;
+  console.log(cookie);
+  const decoded = jwt.verify(cookie, secretKey);
+  console.log(decoded);
 
-  await dataSource.query(
-    `INSERT INTO posts(
-        title,
-        content,
-        user_id
-    ) VALUES (?, ?, ?);
-    `,
-    [title, content, user_id]
-  );
-  res.status(201).json({ message: 'postCreated' });
+  // const post = () => {
+  //   if(cookie.token)
+  //   await dataSource.query(
+  //     `INSERT INTO posts(
+  //         title,
+  //         content,
+  //         user_id
+  //     ) VALUES (?, ?, ?);
+  //     `,
+  //     [title, content, user_id]
+  //   );
+  //   res.status(201).json({ message: 'postCreated' })
+  // }
+  // post();
 });
 
 app.put('/posts/:postId', async (req, res) => {
