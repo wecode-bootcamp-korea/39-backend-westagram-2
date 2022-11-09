@@ -1,6 +1,5 @@
 -- migrate:up
-CREATE TABLE comments
-(
+CREATE TABLE comments (
   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY ,
   content VARCHAR(3000) NOT NULL,
   user_id INT NOT NULL,
