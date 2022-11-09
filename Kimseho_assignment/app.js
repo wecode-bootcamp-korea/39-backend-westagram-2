@@ -4,8 +4,15 @@ const http = require("http");
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
-
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const { DataSource } = require("typeorm");
+
+const header = {
+  typ: "JWT",
+  alg: "HS256",
+};
+const payLoad = { foo: "bar" };
 const database = new DataSource({
   type: process.env.TYPEORM_CONNECTION,
   host: process.env.TYPEORM_HOST,
@@ -14,6 +21,7 @@ const database = new DataSource({
   password: process.env.TYPEORM_PASSWORD,
   database: process.env.TYPEORM_DATABASE,
 });
+const secretKey = process.env.secretKey;
 
 database.initialize().then(() => {
   console.log("Data Source has been initialized!");
@@ -70,33 +78,79 @@ app.get("/posts/:userId", async (req, res) => {
 app.post("/user/signup", async (req, res, next) => {
   const { name, email, password, profile_image } = req.body;
 
+  const hashedPassword = await bcrypt.hash(password, saltRounds);
+
   await database.query(
     `INSERT INTO users(
-        name,
-        email,
-        password,
-        profile_image)
-      VALUES (?,?,?,?)`,
-    [name, email, password, profile_image]
+          name,
+          email,
+          password,
+          profile_image)
+      VALUES (?,?,?,?);
+    `,
+    [name, email, hashedPassword, profile_image]
   );
 
   res.status(201).json({ message: "userCreated!" });
 });
 
-app.post("/postup", async (req, res, next) => {
-  const { user_id, posting_title, posting_content, posting_imgUrl } = req.body;
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const [checkUser] = await database.query(
+      `SELECT 
+        email,
+        password
+    FROM users
+    WHERE email = ?`,
+      [email]
+    );
 
-  await database.query(
-    `INSERT INTO posts(
+    const checkHash = (password, hashedPassword) => {
+      return bcrypt.compare(password, hashedPassword);
+    };
+
+    if (await checkHash(password, checkUser["password"])) {
+      const jwtToken = jwt.sign(payLoad, secretKey);
+      return res.status(201).json({ accessToken: jwtToken });
+    } else {
+      return res.status(404).json({ message: "Invalid User" });
+    }
+  } catch (err) {
+    if (err instanceof TypeError) {
+      return res.status(404).json({ message: "email wrong" });
+    }
+  }
+});
+
+app.post("/postup", async (req, res, next) => {
+  try {
+    const { user_id, posting_title, posting_content, posting_imgUrl } =
+      req.body;
+
+    const { headers } = req;
+    const decoded = jwt.verify(req.headers.authorization, secretKey);
+
+    console.log(decoded);
+
+    await database.query(
+      `INSERT INTO posts(
         user_id,
         posting_title,
         posting_content,
         posting_imgUrl)
     VALUES (?,?,?,?);`,
-    [user_id, posting_title, posting_content, posting_imgUrl]
-  );
+      [user_id, posting_title, posting_content, posting_imgUrl]
+    );
 
-  res.status(201).json({ message: "postCreated!" });
+    res.status(201).json({ message: "postCreated!" });
+  } catch (err) {
+    if (err instanceof jwt.JsonWebTokenError) {
+      res.status(401).json({ message: "Invalid Accses Token" });
+    } else if (err.name == "SyntaxError") {
+      res.status(400).json({ message: "Syntax Error" });
+    }
+  }
 });
 
 app.post("/postlike/:postId/:userId", async (req, res, next) => {
@@ -132,6 +186,8 @@ app.post("/postlike/:postId/:userId", async (req, res, next) => {
 app.patch("/post/:postId", async (req, res, next) => {
   const { postId } = req.params;
   const { postingTitle, postingContent, postingImg } = req.body;
+  const { headers } = req;
+  const decoded = jwt.verify(req.headers.authorization, secretKey);
 
   await database.query(
     `UPDATE posts
