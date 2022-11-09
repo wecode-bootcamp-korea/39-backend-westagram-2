@@ -37,7 +37,7 @@ app.get("/ping",(req, res, next)=>{
 })
 
 app.post('/users',async (req ,res,next)=>{
-    const {id, name, email, profile_image, password } =req.body
+    const {name, email, profile_image, password } =req.body
 
     await appDataSource.query(
         `INSERT INTO users(
@@ -50,7 +50,6 @@ app.post('/users',async (req ,res,next)=>{
     );
     res.status(201).json({message:"userCreated"})
 })
-
 
 const server = http.createServer(app)
 
