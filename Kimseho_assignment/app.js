@@ -130,7 +130,6 @@ app.post("/postup", async (req, res, next) => {
 
     const decoded = jwt.verify(req.headers.token, secretKey);
 
-    console.log(decoded);
     await database.query(
       `INSERT INTO posts(
         user_id,
