@@ -8,6 +8,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const { DataSource } = require('typeorm');
+const withAuth = require('./withAuth');
 
 const app = express();
 const server = http.createServer(app);
@@ -36,6 +37,7 @@ dataSource
 app.use(express.json());
 app.use(cors());
 app.use(morgan('dev'));
+app.use('/posts', withAuth);
 
 app.get('/ping', (req, res) => {
   res.json({ message: 'pong' });
@@ -140,7 +142,7 @@ app.post('/login', async (req, res) => {
     );
 
     const check = await checkHash(password, result.password);
-    const payLoad = { payLoad: result.name };
+    const payLoad = { payLoad: result.id };
     const jwtToken = jwt.sign(payLoad, secretKey);
 
     if (check === true) {
@@ -155,26 +157,25 @@ app.post('/login', async (req, res) => {
 });
 
 app.post('/posts', async (req, res) => {
-  const { title, content, user_id } = req.body;
-  const { cookie } = req.headers;
-  console.log(cookie);
-  const decoded = jwt.verify(cookie, secretKey);
-  console.log(decoded);
+  const { title, content } = req.body;
 
-  // const post = () => {
-  //   if(cookie.token)
-  //   await dataSource.query(
-  //     `INSERT INTO posts(
-  //         title,
-  //         content,
-  //         user_id
-  //     ) VALUES (?, ?, ?);
-  //     `,
-  //     [title, content, user_id]
-  //   );
-  //   res.status(201).json({ message: 'postCreated' })
-  // }
-  // post();
+  const post = async () => {
+    if (req.decoded) {
+      await dataSource.query(
+        `INSERT INTO posts(
+          title,
+          content,
+          user_id
+      ) VALUES (?, ?, ?);
+      `,
+        [title, content, req.decoded.payLoad]
+      );
+      res.status(201).json({ message: 'postCreated' });
+    } else {
+      res.status(401).json({ message: 'invalid input' });
+    }
+  };
+  post();
 });
 
 app.put('/posts/:postId', async (req, res) => {
