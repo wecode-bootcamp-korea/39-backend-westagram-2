@@ -8,11 +8,6 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { DataSource } = require("typeorm");
 
-const header = {
-  typ: "JWT",
-  alg: "HS256",
-};
-
 const database = new DataSource({
   type: process.env.TYPEORM_CONNECTION,
   host: process.env.TYPEORM_HOST,
@@ -54,47 +49,41 @@ app.get("/posts", async (req, res) => {
   );
 });
 
-app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const [checkUser] = await database.query(
-      `SELECT 
-        email,
-        password
-    FROM users
-    WHERE email = ?`,
-      [email]
-    );
+app.get("/posts/:userId", async (req, res) => {
+  const { userId } = req.params;
 
-    const checkHash = (password, hashedPassword) => {
-      return bcrypt.compare(password, hashedPassword);
-    };
+  const [rows] = await database.query(
+    `SELECT
+        u.id,
+        u.name,
+    JSON_ARRAYAGG(JSON_OBJECT(
+        "postingId", p.id,
+        "postingImageUrl", posting_imgUrl,
+         "postingContent", posting_content
+    )) posting
+    FROM users u
+    INNER JOIN posts p ON p.user_id = u.id
+    WHERE u.id = ?
+    GROUP BY u.id`,
+    [userId]
+  );
 
-    if (await checkHash(password, checkUser["password"])) {
-      const jwtToken = jwt.sign(payLoad, checkUser["password"]);
-      return res.status(201).json({ accessToken: jwtToken });
-    } else {
-      return res.status(404).json({ message: "Invalid User" });
-    }
-  } catch (err) {
-    console.log(err);
-    return res.status(400).json({ message: "email wrong" });
-  }
+  res.status(200).json({ data: rows });
 });
 
 app.post("/user/signup", async (req, res, next) => {
   const { name, email, password, profile_image } = req.body;
-  saltRounds = parseInt(saltRounds);
-  const hashedPassword = await bcrypt.hash(password, saltRounds);
 
+  saltRounds = parseInt(saltRounds);
+  const hashedPassword = bcrypt.hashSync(password, saltRounds);
   await database.query(
     `INSERT INTO users(
-          name,
-          email,
-          password,
-          profile_image)
-      VALUES (?,?,?,?);
-    `,
+            name,
+            email,
+            password,
+            profile_image)
+        VALUES (?,?,?,?);
+      `,
     [name, email, hashedPassword, profile_image]
   );
 
@@ -114,6 +103,34 @@ app.post("/login", async (req, res) => {
       [email]
     );
 
+    const checkHash = (password, hashedPassword) => {
+      return bcrypt.compare(password, hashedPassword);
+    };
+
+    if (await checkHash(password, checkUser["password"])) {
+      const jwtToken = jwt.sign({ id: checkUser.id }, secretKey, {
+        expiresIn: "1d",
+      });
+
+      return res.status(201).json({ accessToken: jwtToken });
+    } else {
+      return res.status(404).json({ message: "Invalid User" });
+    }
+  } catch (err) {
+    if (err instanceof TypeError) {
+      return res.status(404).json({ message: "email wrong" });
+    }
+  }
+});
+
+app.post("/postup", async (req, res, next) => {
+  try {
+    const { user_id, posting_title, posting_content, posting_imgUrl } =
+      req.body;
+
+    const decoded = jwt.verify(req.headers.token, secretKey);
+
+    console.log(decoded);
     await database.query(
       `INSERT INTO posts(
         user_id,
