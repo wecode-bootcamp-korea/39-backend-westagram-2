@@ -7,10 +7,7 @@ const morgan = require("morgan");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { DataSource } = require("typeorm");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 
-const saltRounds = 10;
 const header = {
   typ: "JWT",
   alg: "HS256",
@@ -71,7 +68,7 @@ app.post("/login", async (req, res) => {
 
 app.post("/user/signup", async (req, res, next) => {
   const { name, email, password, profile_image } = req.body;
-
+  saltRounds = parseInt(saltRounds);
   const hashedPassword = await bcrypt.hash(password, saltRounds);
 
   await database.query(
