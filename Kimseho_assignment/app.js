@@ -38,6 +38,22 @@ app.get("/ping", (req, res) => {
   return res.status(200).json({ message: "pong" });
 });
 
+app.get("/posts", async (req, res) => {
+  await database.query(
+    `SELECT
+        users.id AS userId,
+        users.profile_image AS userProfileImage,
+        posts.id AS postingId,
+        posts.posting_imgUrl AS postingImageUrl,
+        posts.posting_content AS postingContent
+    FROM users
+    LEFT JOIN posts ON posts.user_id = users.id`,
+    (err, rows) => {
+      res.status(200).json({ data: rows });
+    }
+  );
+});
+
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
