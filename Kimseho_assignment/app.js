@@ -17,6 +17,7 @@ const database = new DataSource({
   database: process.env.TYPEORM_DATABASE,
 });
 const secretKey = process.env.secretKey;
+let saltRounds = process.env.saltRounds;
 
 database.initialize().then(() => {
   console.log("Data Source has been initialized!");
@@ -73,16 +74,16 @@ app.get("/posts/:userId", async (req, res) => {
 app.post("/user/signup", async (req, res, next) => {
   const { name, email, password, profile_image } = req.body;
 
-  const hashedPassword = await bcrypt.hash(password, saltRounds);
-
+  saltRounds = parseInt(saltRounds);
+  const hashedPassword = bcrypt.hashSync(password, saltRounds);
   await database.query(
     `INSERT INTO users(
-          name,
-          email,
-          password,
-          profile_image)
-      VALUES (?,?,?,?);
-    `,
+            name,
+            email,
+            password,
+            profile_image)
+        VALUES (?,?,?,?);
+      `,
     [name, email, hashedPassword, profile_image]
   );
 
