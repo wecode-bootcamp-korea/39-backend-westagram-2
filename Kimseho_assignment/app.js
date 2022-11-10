@@ -14,7 +14,7 @@ const header = {
   alg: "HS256",
 };
 const payLoad = { foo: "bar" };
-const myDataSource = new DataSource({
+const database = new DataSource({
   type: process.env.TYPEORM_CONNECTION,
   host: process.env.TYPEORM_HOST,
   port: process.env.TYPEORM_PORT,
@@ -23,7 +23,7 @@ const myDataSource = new DataSource({
   database: process.env.TYPEORM_DATABASE,
 });
 
-myDataSource.initialize().then(() => {
+database.initialize().then(() => {
   console.log("Data Source has been initialized!");
 });
 
@@ -40,7 +40,7 @@ app.get("/ping", (req, res) => {
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
-    const [checkUser] = await myDataSource.query(
+    const [checkUser] = await database.query(
       `SELECT 
         email,
         password
@@ -61,7 +61,7 @@ app.post("/login", async (req, res) => {
     }
   } catch (err) {
     console.log(err);
-    return res.status(409).json({ message: "email wrong" });
+    return res.status(400).json({ message: "email wrong" });
   }
 });
 
@@ -70,7 +70,7 @@ app.post("/user/signup", async (req, res, next) => {
 
   const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-  await myDataSource.query(
+  await database.query(
     `INSERT INTO users(
           name,
           email,
@@ -87,7 +87,7 @@ app.post("/user/signup", async (req, res, next) => {
 app.post("/postup", async (req, res, next) => {
   const { user_id, posting_title, posting_content, posting_imgUrl } = req.body;
 
-  await myDataSource.query(
+  await database.query(
     `INSERT INTO posts(
         user_id,
         posting_title,
