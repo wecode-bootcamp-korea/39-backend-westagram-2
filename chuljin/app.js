@@ -109,8 +109,6 @@ app.get("/users/posts/lookup/:id", async(req, res, next) => {
             WHERE users.id = ${id}; 
         `, 
         (err, rows) => { 
-            //console.log(rows);
-            let postings
             res.status(200).json(
                 { "data" : {
                         "userId" : rows[0].userId, 
@@ -144,7 +142,6 @@ app.patch("/posts/update/:userId/:postId", async(req, res, next) => {
             ON users.id = posts.user_id
             WHERE users.id=${userId} and posts.id=${postId};
         `, (err, rows) => { 
-            console.log(rows)
             res.status(200).json({"data" : rows});
     });
 })

@@ -27,7 +27,7 @@ const dataSource = new DataSource({
 dataSource
   .initialize()
   .then(() => {
-    console.log('Data Source has been initialized');
+    console.log("Data Source has been initialized");
   })
   .catch((err) => {
     console.error('Error during Data Source initialization', err);
@@ -38,6 +38,7 @@ app.use(express.json());
 app.use(cors());
 app.use(morgan('dev'));
 app.use('/posts', withAuth);
+
 
 app.get('/ping', (req, res) => {
   res.json({ message: 'pong' });
