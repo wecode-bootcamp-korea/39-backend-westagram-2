@@ -8,11 +8,14 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { DataSource } = require("typeorm");
 
+<<<<<<< HEAD
 const header = {
   typ: "JWT",
   alg: "HS256",
 };
 const payLoad = { foo: "bar" };
+=======
+>>>>>>> b279d7b57f743cc7d8880f699a0e9b5d07963a2a
 const database = new DataSource({
   type: process.env.TYPEORM_CONNECTION,
   host: process.env.TYPEORM_HOST,
