@@ -5,8 +5,8 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 
-const { DataSource, SimpleConsoleLogger } = require('typeorm');
-const { json } = require('express');
+const { DataSource } = require('typeorm');
+
 const appDataSource = new DataSource({
     type: process.env.TYPEORM_CONNECTION,
     host: process.env.TYPEORM_HOST,
@@ -70,15 +70,15 @@ app.post('/posts',async(req, res, next)=>{
 })
 
 
-app.get('/users_posts', async(req, res)=>{
+app.get('/posts/userId', async(req, res)=>{
     
     await appDataSource.query(
     `SELECT
-    u.id as userId,
-    u.profile_image as userProfileImage,
-    p.user_id as postingId,
-    p.image_url as postingImageUrl,
-    p.content as postingContent
+        u.id as userId,
+        u.profile_image as userProfileImage,
+        p.user_id as postingId,
+        p.image_url as postingImageUrl,
+        p.content as postingContent
     FROM users u
     INNER JOIN posts p ON u.id = p.user_id;
     `,(err, rows) => {
@@ -93,8 +93,8 @@ app.get('/posts/:userId', async (req , res)=>{
     try {
         const [result] = await appDataSource.query(
         `SELECT
-            u.id userId,
-            u.profile_image userProfileImage,
+                u.id userId,
+                u.profile_image userProfileImage,
             JSON_ARRAYAGG(
                 JSON_OBJECT(
                 "postingId", p.id,
@@ -113,9 +113,9 @@ app.get('/posts/:userId', async (req , res)=>{
     });
 
 
-//여기부터 하는중입니다
 app.put('/posts/:postId', async(req,res)=>{
-    const {postingTitle, postingContent,postingUrl} =req.body
+    const {title, content, image_url} =req.body
+    const { postId } = req.params
     
     try{
     await appDataSource.query(
@@ -123,17 +123,17 @@ app.put('/posts/:postId', async(req,res)=>{
         SET 
             title= ?,
             content= ?,
-            image_Url= ?
+            image_url= ?
         WHERE id= ${postId}
-            `, [postingTitle, postingContent, postingUrl]
+            `, [title, content, image_url]
     );
     const [result] = await appDataSource.query(
         `SELECT
-        u.id userId,
-        u.name userName,
-        p.id postingId,
-        p.title postingTitle,
-        p.content postingContent
+            u.id userId,
+            u.name userName,
+            p.id postingId,
+            p.title postingTitle,
+            p.content postingContent
         FROM users u
         JOIN posts p ON u.id = p.user_id
         WHERE p.id =${postId}
@@ -147,7 +147,6 @@ app.put('/posts/:postId', async(req,res)=>{
 });
 
 
-//지우기
 app.delete('/posts/:postId', async(req,res)=>{
     const {postId} = req.params;
     
@@ -159,14 +158,23 @@ app.delete('/posts/:postId', async(req,res)=>{
         res.status(204).json({message: "postingDeleted"})
 })
 
-//과제8 좋아요
-app.post('/likes', async(req, res)=>{
-    const {userId, postId} =req.body
 
-    await appDataSource.query()
-    
-    res.status(201).json({message: "likeCreated!"})
-})
+app.post('/likes', async(req, res)=>{
+    const {userId, postId} =req.body;
+
+    try {
+        await appDataSource.query(
+            `INSERT INTO likes(
+                user_id,
+                post_id
+            )VALUES(?,?)
+            `, [userId, postId]
+        );
+        res.status(201).json({message : "like created!"})
+    }catch (err) {
+        res.status(409).json({error : "like failed"})
+    }
+    })
 
 
 
