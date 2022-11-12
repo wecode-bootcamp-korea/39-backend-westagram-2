@@ -4,18 +4,6 @@ const http = require('http');
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const bcrypt =require("bcrypt");
-const JWT = require("jsonbtoken");
-
-
-const password = 'password';
-const saltRounds =12;
-const makeHash = async (password, saltRounds)=>{
-    return await bcrypt.hash(password, saltRounds);
-}
-const main =async() =>{
-    const hashedPassword = await makeHash(password, saltRounds);
-}
 
 const { DataSource } = require('typeorm');
 
