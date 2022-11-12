@@ -25,7 +25,18 @@ const createUser = async (name, email, hashedPassword) => {
   );
 };
 
+const getAllUsers = async () => {
+  const allUsers = await dataSource.query(
+    `
+      SELECT *
+      FROM users
+    `
+  );
+  return allUsers;
+};
+
 module.exports = {
   getUserByEmail,
   createUser,
+  getAllUsers,
 };

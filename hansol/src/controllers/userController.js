@@ -12,8 +12,27 @@ const signup = async (req, res) => {
   }
 };
 
-const login = () => {
-  console.log('로그인로직');
+const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const accessToken = await userService.login(email, password);
+
+    res.cookie('accessToken', accessToken);
+    res.status(201).json({ message: 'login success' }).end();
+  } catch (err) {
+    res.status(err.statusCode || 400).json({ message: err.message });
+  }
 };
 
-module.exports = { signup, login };
+const getAllUsers = async (req, res) => {
+  try {
+    const usersData = await userService.getAllUsers();
+
+    res.status(200).json(usersData);
+  } catch (err) {
+    res.status(err.statusCode || 400).json({ message: err.message });
+  }
+};
+
+module.exports = { signup, login, getAllUsers };
