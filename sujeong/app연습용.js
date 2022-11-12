@@ -4,19 +4,32 @@ const http = require('http');
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+
+//BCRYPT
 const bcrypt =require("bcrypt");
-const JWT = require("jsonbtoken");
-
-
 const password = 'password';
 const saltRounds =12;
 const makeHash = async (password, saltRounds)=>{
     return await bcrypt.hash(password, saltRounds);
 }
 const main =async() =>{
-    const hashedPassword = await makeHash(password, saltRounds);
+    const hashedPassword = await makeHash(password, saltRounds); 
 }
+//JWT
+const jwt = require("jsonwebtoken");
+const payLoad = { foo : 'bar'};
+const secretKey = 'mySecretKey';
 
+const jwtToken = jwt.sign(payLoad, secretKey);
+console.log(jwtToken);
+
+const decoded = jwt.verify(jwtToken, secretKey);
+console.log(decoded)
+=> { foo: 'bar', iat : 1650555667}
+
+
+
+//
 const { DataSource } = require('typeorm');
 
 const appDataSource = new DataSource({
@@ -27,6 +40,8 @@ const appDataSource = new DataSource({
     password: process.env.TYPEORM_PASSWORD,
     database: process.env.TYPEORM_DATABASE
 })
+
+
 
 appDataSource.initialize()
 .then(()=>{
