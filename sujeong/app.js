@@ -93,14 +93,14 @@ app.get('/posts/:userId', async (req , res)=>{
     try {
         const [result] = await appDataSource.query(
         `SELECT
-                u.id userId,
-                u.profile_image userProfileImage,
-            JSON_ARRAYAGG(
-                JSON_OBJECT(
-                "postingId", p.id,
-                "postingImageUrl", p.image_url,
-                "postingContnet", p.content)  
-            ) as postings
+            u.id userId,
+            u.profile_image userProfileImage,
+        JSON_ARRAYAGG(
+            JSON_OBJECT(
+            "postingId", p.id,
+            "postingImageUrl", p.image_url,
+            "postingContnet", p.content)  
+        ) as postings
         FROM users u 
         JOIN posts p ON p.user_id = u.id
         WHERE u.id = ${userId}

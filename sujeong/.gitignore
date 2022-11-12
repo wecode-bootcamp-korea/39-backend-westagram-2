@@ -405,3 +405,5 @@ json-schema/
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,vim,webstorm,macos,linux,windows,zsh,node
 
 schema.sql
+
+/dongken/db/migrations/
