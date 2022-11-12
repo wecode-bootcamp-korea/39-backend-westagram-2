@@ -5,6 +5,7 @@ const morgan = require('morgan');
 const cors = require('cors');
 const app = express();
 
+
 const { dataSource } = require('./src/models/dataSource');
 const { router } = require('./src/routes');
 
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use(cors());
 app.use(morgan('dev'));
 app.use(router);
+
 
 app.get('/ping', (req, res) => {
   res.json({ message: 'pong' });
