@@ -55,7 +55,6 @@ const registerPost = async (title, content, image_url, userId) => {
 };
 
 const getUserId = async (postId) => {
-  console.log(postId);
   const [postUserId] = await dataSource.query(
     `
     SELECT
@@ -71,7 +70,7 @@ const getUserId = async (postId) => {
 const deletePost = async (postId) => {
   await dataSource.query(
     `
-      DELETE 
+    DELETE 
     FROM posts p
     WHERE p.id = ?
     `,
@@ -79,10 +78,24 @@ const deletePost = async (postId) => {
   );
 };
 
+const putPost = async (title, content, image_url, postId) => {
+  await dataSource.query(
+    `
+      UPDATE posts
+      SET 
+        title = ?,
+        content = ?,
+        image_url = ?
+      WHERE id = ?
+    `,
+    [title, content, image_url, postId]
+  );
+};
 module.exports = {
   getAllPosts,
   getUserPosts,
   registerPost,
   deletePost,
   getUserId,
+  putPost,
 };

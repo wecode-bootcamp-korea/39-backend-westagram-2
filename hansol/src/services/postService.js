@@ -40,4 +40,26 @@ const deletePost = async (userId, postId) => {
   }
   await postDao.deletePost(postId);
 };
-module.exports = { getAllPosts, getUserPosts, registerPost, deletePost };
+
+const putPost = async (userId, postId, title, content, image_url) => {
+  const postUserId = await postDao.getUserId(postId);
+  if (!postUserId) {
+    const err = new Error('게시물이 존재하지 않습니다.');
+    err.statusCode = 400;
+    throw err;
+  }
+  if (postUserId.user_id !== userId) {
+    const err = new Error('해당 게시물 수정 권한이 없습니다.');
+    err.statusCode = 403;
+    throw err;
+  }
+  await postDao.putPost(title, content, image_url, postId);
+};
+
+module.exports = {
+  getAllPosts,
+  getUserPosts,
+  registerPost,
+  deletePost,
+  putPost,
+};
