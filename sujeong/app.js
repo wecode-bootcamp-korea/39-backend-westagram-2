@@ -4,6 +4,8 @@ const http = require('http');
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
+const bcrypt =require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const { DataSource } = require('typeorm');
 
@@ -108,7 +110,7 @@ app.get('/posts/:userId', async (req , res)=>{
         );
         return res.status(200).json({ data: result });
     } catch (err) {
-        return res.status(409).json({ error: 'invalid input' });
+        return res.status(401).json({ error: 'invalid input' });
     }
     });
 
@@ -142,7 +144,7 @@ app.put('/posts/:postId', async(req,res)=>{
     
     res.status(200).json({data: result});
     }catch (err){
-        return res.status(409).json({"message": "invalid input"})
+        return res.status(401).json({"message": "invalid input"})
     }
 });
 
@@ -172,7 +174,7 @@ app.post('/likes', async(req, res)=>{
         );
         res.status(201).json({message : "like created!"})
     }catch (err) {
-        res.status(409).json({error : "like failed"})
+        res.status(401).json({error : "like failed"})
     }
     })
 
