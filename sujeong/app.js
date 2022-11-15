@@ -42,6 +42,7 @@ app.get("/ping",(req, res, next)=>{
 
 app.post('/users',async (req ,res,next)=>{
     const {name, email, profile_image, password } =req.body
+    const hash = await bcrypt.hash(password, 12)
 
     await appDataSource.query(
         `INSERT INTO users(
@@ -50,9 +51,22 @@ app.post('/users',async (req ,res,next)=>{
             profile_image,
             password
         ) VALUES ( ?, ?, ?, ?);
-        `,[name, email, profile_image, password]
+        `,[name, email, profile_image, hash]
     );
     res.status(201).json({message:"userCreated"})
+})
+
+app.post('/signin',async(req, res ,next)=>{
+    const {email, password} =req.body
+    const user = await appDataSource.query(
+        `SELECT
+            id,
+            email,
+            password
+        FROM users
+        WHERE email = ?`
+        ,[email]
+    );
 })
 
 
