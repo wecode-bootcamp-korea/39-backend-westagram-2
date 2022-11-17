@@ -4,8 +4,8 @@ const http = require("http");
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
-
-
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const {DataSource} = require('typeorm');
 
@@ -35,7 +35,7 @@ app.get("/ping", (req,res)=> {
 app.post('/users/signup', async (req, res) => {
 	const { name, email, profile_image, password} = req.body
 
-    
+    const bcryptPassword = bcrypt.hashSync(password,12)
     await appDateSource.query(
 		`INSERT INTO users(
 		    name,
@@ -44,11 +44,38 @@ app.post('/users/signup', async (req, res) => {
             password
 		) VALUES (?, ?, ?, ?);
 		`,
-		[ name, email, profile_image, password]
+		[ name, email, profile_image, bcryptPassword]
 	); 
      res.status(201).json({ message : "userCreated" });
 	})
 
+app.post('/login', async(req, res)=> {
+   const {name, password} = req.body
+   const matchedUser =  await appDateSource.query(
+        `SELECT
+         *
+         FROM users
+         WHERE users.name = '${name}'`)
+         
+        const checkPassword = await bcrypt.compare(password, matchedUser[0].password)
+
+
+        if(checkPassword === true){
+        const payLoad = {userId : matchedUser[0].id};
+        const secretKey = 'mySecretKey';
+
+        const jwtToken = jwt.sign(payLoad, secretKey);
+
+        return res.status(200).json({accessToken: jwtToken})
+        } else {
+        return  res.status(401).json({message : "Invalid User"})
+        }
+       
+    })
+            
+         
+
+    
  app.post('/posts', async (req, res) => {
 	const { title, content, image_url, user_id} = req.body
     
@@ -77,6 +104,7 @@ app.get('/posts/all', async(req, res) => {
         INNER JOIN users ON posts.user_id = users.id`
             ,(err, rows) => {
           res.status(200).json({data : rows});
+       
         });
     });
     
@@ -129,6 +157,7 @@ app.patch('/posts/:postId', async(req, res) => {
         WHERE posts.id = ${postId}
         `
     )
+    console.log(result)
     res.status(201).json({data : result})
     }
 )
